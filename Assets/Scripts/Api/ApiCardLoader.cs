@@ -5,7 +5,7 @@ using UnityEngine.Networking;
 
 public class ApiCardLoader : MonoBehaviour
 {
-    public string apiUrl = "https://www.imtech.com.ar/GAME/api/v1/get_cartas.php";
+    public string apiUrl = "http://localhost/GAME/api/v1/get_cartas.php";
 
     public void DescargarCartas(System.Action<List<CardJsonData>> callback)
     {

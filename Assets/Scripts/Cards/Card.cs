@@ -1,21 +1,40 @@
 using UnityEngine;
+using UnityEngine.UI; // Para Image y Sprite
 using UnityEngine.EventSystems;
-using UnityEngine.UI; // Necesario si usas Image en ToggleHighlight como fallback
 
-public class Card : MonoBehaviour, IPointerClickHandler
+public class Card : MonoBehaviour, IPointerClickHandler // Asegúrate que implementa IPointerClickHandler
 {
-    [Tooltip("Asigna aquí el ScriptableObject con los datos de esta carta.")]
     public ScriptableCard cardData;
     private CardUI cardUI;
     private CardZoomManager zoomManager;
 
-    // --- VARIABLE NUEVA PARA EL BORDE ---
-    [Header("Feedback Visual")]
-    [Tooltip("Arrastra aquí el GameObject HIJO llamado 'HighlightBorder' desde el Prefab")]
-    public GameObject highlightBorderObject; // Referencia al objeto del borde
-    // ------------------------------------
+    [Header("Feedback Visual (Selección en Mano)")]
+    public GameObject highlightBorderObject; // Borde verde
 
-    // Propiedad para acceder a los datos (Opcional, alternativa a GetCardData)
+    [Header("Componentes Visuales del Frente")]
+    public GameObject artObject;
+    public GameObject descripcionObject;
+    public GameObject nombreObject;
+    public GameObject ataqueObject;
+    public GameObject defensaObject;
+    public GameObject costoObject;
+    public Image marcoRarezaImage;      // El Image del marco
+    public GameObject elementoObject;    // El GO que contiene la Faccion
+
+    [Header("Recursos de Marcos por Rareza")]
+    public Sprite marcoComunSprite;
+    public Sprite marcoRaraSprite;
+    public Sprite marcoEpicaSprite;
+    public Sprite marcoLegendariaSprite;
+
+    [Header("Feedback Visual - Descarte")]
+    public GameObject discardBorderObject; // Borde negro
+
+    [Header("Interacción")]
+    [Tooltip("El GameObject invisible que detecta los clicks en toda la carta.")]
+    public GameObject clickHitboxObject; // Arrastra aquí el hijo "ClickHitbox"
+    public bool isInteractable = true; // Controla si la carta responde a clicks
+
     public ScriptableCard CardData => cardData;
 
     private void Awake()
@@ -24,98 +43,133 @@ public class Card : MonoBehaviour, IPointerClickHandler
         if (cardUI == null) cardUI = GetComponentInChildren<CardUI>();
         if (cardUI == null) Debug.LogError($"Error en '{gameObject.name}': No se encontró CardUI.");
 
-        // Desactivar el borde al inicio por si acaso se quedó activo en el editor
-        if (highlightBorderObject != null)
-        {
-            highlightBorderObject.SetActive(false);
-        }
-        else
-        {
-             Debug.LogWarning($"Carta '{gameObject.name}': No se asignó 'highlightBorderObject' en el Inspector. El resaltado no funcionará con borde.");
-        }
+        // Asignar/Buscar referencias (MEJOR ASIGNAR EN INSPECTOR)
+        ConfigureHighlight(ref highlightBorderObject, "HighlightBorder");
+        AssignChildObject(ref artObject, "Art");
+        AssignChildObject(ref descripcionObject, "Descripcion");
+        AssignChildObject(ref nombreObject, "Nombre");
+        AssignChildObject(ref ataqueObject, "Ataque");
+        AssignChildObject(ref defensaObject, "Defensa");
+        AssignChildObject(ref costoObject, "Costo");
+        AssignChildObject(ref elementoObject, "Elemento");
+        AssignImageComponent(ref marcoRarezaImage, "MarcoRareza");
+        ConfigureHighlight(ref discardBorderObject, "DiscardBorder");
+        AssignChildObject(ref clickHitboxObject, "ClickHitbox");
+
+        if (clickHitboxObject != null) {
+             Image hitboxImage = clickHitboxObject.GetComponent<Image>();
+             if (hitboxImage == null || !hitboxImage.raycastTarget) Debug.LogWarning($"'{name}': ClickHitbox necesita Image con Raycast Target activado.");
+        } else { Debug.LogWarning($"'{name}': clickHitboxObject no asignado/encontrado."); }
     }
+
+    private void ConfigureHighlight(ref GameObject highlightGO, string childName) { if (highlightGO == null) { Transform found = transform.Find(childName); if (found != null) highlightGO = found.gameObject; } if (highlightGO != null) { highlightGO.SetActive(false); } }
+    private void AssignChildObject(ref GameObject field, string childName) { if (field == null) { Transform found = transform.Find(childName); if (found != null) field = found.gameObject; } }
+    private void AssignImageComponent(ref Image imageComp, string childName) { if (imageComp == null) { Transform found = transform.Find(childName); if (found != null) imageComp = found.GetComponent<Image>(); if (imageComp == null && found != null) Debug.LogError($"El hijo '{childName}' no tiene Image."); } }
 
     private void Start()
     {
         zoomManager = FindFirstObjectByType<CardZoomManager>();
-        if (zoomManager == null) Debug.LogError("¡ERROR CRÍTICO! No se encontró CardZoomManager.");
+        if (zoomManager == null) Debug.LogError($"No se encontró CardZoomManager para '{gameObject.name}'.");
         UpdateCardUI();
     }
 
-    // Método para establecer datos
-     public void SetCardData(ScriptableCard newCardData)
+    public void SetCardData(ScriptableCard newCardData)
     {
         cardData = newCardData;
         UpdateCardUI();
     }
 
-    // Método para actualizar UI
-    private void UpdateCardUI() {
-         if (cardData != null && cardUI != null) {
-             cardUI.Setup(cardData);
-         }
+    private void UpdateCardUI()
+    {
+        if (cardData == null) return;
+        if (cardUI != null && cardUI.enabled) { cardUI.Setup(cardData); }
+        UpdateCardFrame();
     }
 
-    // --- OnPointerClick (Como en la respuesta #77, diferencia Izq/Der) ---
+    private void UpdateCardFrame()
+    {
+         if (cardData == null || marcoRarezaImage == null) return;
+         Sprite spriteToShow = marcoComunSprite;
+         switch (cardData.Rareza?.ToLowerInvariant()) {
+             case "rara": spriteToShow = marcoRaraSprite; break;
+             case "epica": spriteToShow = marcoEpicaSprite; break;
+             case "legendaria": spriteToShow = marcoLegendariaSprite; break;
+             case "comun": default: spriteToShow = marcoComunSprite; break;
+         }
+         if (spriteToShow != null) { marcoRarezaImage.sprite = spriteToShow; }
+         else { marcoRarezaImage.sprite = marcoComunSprite; }
+    }
+
+    // ---- MÉTODO CORREGIDO A PUBLIC ----
     public void OnPointerClick(PointerEventData eventData)
     {
-        // --- SI ES CLIC IZQUIERDO: Seleccionar / Deseleccionar ---
+        if (!isInteractable || (GameManager.Instance != null && GameManager.Instance.IsGameOver)) return;
+
         if (eventData.button == PointerEventData.InputButton.Left)
         {
-
-            if (transform.parent.name != "HandArea") return;
-            Debug.Log($"Clic Izquierdo en: {cardData?.NombreCarta}");
-            if (GameManager.Instance == null) { Debug.LogError("GameManager.Instance es NULL!"); return; }
-
-            if (GameManager.Instance.selectedCardObject == this.gameObject) {
-                GameManager.Instance.selectedCardObject = null;
-                ToggleHighlight(false); // Apagar resaltado
-                Debug.Log($"Carta deseleccionada: {cardData?.NombreCarta}");
-            } else {
-                if (GameManager.Instance.selectedCardObject != null) {
-                    Card previouslySelectedCard = GameManager.Instance.selectedCardObject.GetComponent<Card>();
-                    if (previouslySelectedCard != null) {
-                        previouslySelectedCard.ToggleHighlight(false);
-                    }
+            DeckManager currentDeckManager = GameManager.Instance?.GetCurrentPlayerDeckManager();
+            // Solo procesar si está en la mano del jugador activo
+            if (currentDeckManager != null && transform.parent == currentDeckManager.handContainer)
+            {
+                 if (GameManager.Instance.selectedCardObject == this.gameObject) { /* Deseleccionar */
+                     GameManager.Instance.selectedCardObject = null; ToggleHighlight(false);
+                } else { /* Seleccionar */
+                    if (GameManager.Instance.selectedCardObject != null) { Card prev = GameManager.Instance.selectedCardObject.GetComponent<Card>(); if (prev != null) prev.ToggleHighlight(false); }
+                    GameManager.Instance.selectedCardObject = this.gameObject; ToggleHighlight(true);
                 }
-                GameManager.Instance.selectedCardObject = this.gameObject;
-                ToggleHighlight(true); // Encender resaltado
-                Debug.Log($"Carta seleccionada: {cardData?.NombreCarta}");
-
-                if (transform.parent.name != "HandArea") // O el nombre real de tu zona de mano
-{
-    Debug.Log("Carta ya jugada, no puede seleccionarse.");
-    return;
-}
             }
         }
-        // --- SI ES CLIC DERECHO: Mostrar Zoom ---
-        else if (eventData.button == PointerEventData.InputButton.Right)
+        else if (eventData.button == PointerEventData.InputButton.Right) // ZOOM
         {
-            Debug.Log($"Clic Derecho en: {cardData?.NombreCarta}. Intentando Zoom...");
-            if (zoomManager != null && cardData != null) {
-                 zoomManager.ShowCard(cardData);
-            } else { /* ... Logs de error ... */ }
+            if (zoomManager != null && cardData != null) { zoomManager.ShowCard(cardData); }
+        }
+    }
+    // ---------------------------------
+
+    public void ToggleHighlight(bool highlightOn)
+    {
+        if (highlightBorderObject != null) { highlightBorderObject.SetActive(highlightOn); }
+    }
+
+    // Muestra/Oculta los elementos VISUALES del frente/reverso
+    public void ShowAsCardBack(bool showBack)
+    {
+        if (artObject != null) artObject.SetActive(!showBack);
+        if (descripcionObject != null) descripcionObject.SetActive(!showBack);
+        if (nombreObject != null) nombreObject.SetActive(!showBack);
+        if (ataqueObject != null) ataqueObject.SetActive(!showBack);
+        if (defensaObject != null) defensaObject.SetActive(!showBack);
+        if (costoObject != null) costoObject.SetActive(!showBack);
+        if (elementoObject != null) elementoObject.SetActive(!showBack);
+        if (marcoRarezaImage != null) marcoRarezaImage.gameObject.SetActive(!showBack); // Ocultar marco si es reverso
+
+        if (cardUI != null) { cardUI.enabled = !showBack; }
+    }
+
+    // --- MÉTODO AÑADIDO para look de descarte ---
+    public void SetDiscardedLook(bool isDiscarded)
+    {
+        if (discardBorderObject != null)
+        {
+            discardBorderObject.SetActive(isDiscarded);
         }
     }
 
-    // --- MÉTODO ToggleHighlight MODIFICADO ---
-    // Ahora activa/desactiva el GameObject 'HighlightBorder'
-    public void ToggleHighlight(bool highlightOn)
+    // --- MÉTODO AÑADIDO para controlar interactividad y hitbox ---
+    public void SetInteractable(bool canInteract)
     {
-        if (highlightBorderObject != null)
+        this.isInteractable = canInteract;
+        if (clickHitboxObject != null)
         {
-            // Activa o desactiva el GameObject del borde
-            highlightBorderObject.SetActive(highlightOn);
-            // Debug.Log($"Highlight {highlightOn} para {cardData?.NombreCarta}"); // Log opcional
+            // Activar/Desactivar el hitbox es una forma de controlar la interactividad
+            // si tu Card.OnPointerClick NO verifica isInteractable al inicio.
+            // Pero como sí lo verifica, podrías dejar el hitbox siempre activo
+            // o controlarlo aquí como doble seguridad.
+            clickHitboxObject.SetActive(canInteract);
         }
-        else
+        if (!canInteract)
         {
-            // Si no hay borde asignado, no hace nada o puedes poner un fallback
-             Debug.LogWarning($"Intentando activar/desactivar highlight, pero 'highlightBorderObject' no está asignado en {gameObject.name}");
-            // Fallback: Cambiar color de imagen raíz (si lo prefieres)
-            // var image = GetComponent<Image>();
-            // if (image != null) { image.color = highlightOn ? Color.yellow : Color.white; }
+             ToggleHighlight(false); // Quitar highlight si se vuelve no interactiva
         }
     }
 }

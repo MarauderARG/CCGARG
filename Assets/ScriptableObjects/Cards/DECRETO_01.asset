@@ -19,9 +19,16 @@ MonoBehaviour:
   Resistencia: 0
   Faccion: Neutral
   TipoCarta: Accion
-  Descripcion: "Un decreto r\xE1pido para saltear al congreso. Puede tener efectos
-    inesperados, usualmente negativos para alguien."
-  Rareza: Rara
+  Descripcion: Roba 2 cartas
+  Rareza: Comun
   TieneFueros: 0
   AccionInmediata: 0
+  TieneArrollar: 0
   Ilustracion: {fileID: 21300000, guid: 9303041aed5d2f84688e3e05858df270, type: 3}
+  effectType: 5
+  effectAmount: 2
+  ParamCartasARobar: 0
+  "ParamDa\xF1o": 0
+  ParamCuracion: 0
+  ParamReduccionDeCosto: 0
+  ParamDuracionTurnos: 0

@@ -23,4 +23,12 @@ MonoBehaviour:
   Rareza: Rara
   TieneFueros: 0
   AccionInmediata: 1
+  TieneArrollar: 0
   Ilustracion: {fileID: 21300000, guid: 567b448738e71114cb83f204682cac24, type: 3}
+  effectType: 0
+  effectAmount: 0
+  ParamCartasARobar: 0
+  "ParamDa\xF1o": 0
+  ParamCuracion: 0
+  ParamReduccionDeCosto: 0
+  ParamDuracionTurnos: 0

@@ -13,14 +13,23 @@ MonoBehaviour:
   m_Name: cfks
   m_EditorClassIdentifier: 
   IdUnico: cfks
-  NombreCarta: Cristina F. K
+  NombreCarta: Cristina F. K 2003
   CostoPoderPolitico: 3
-  Influencia: 3
-  Resistencia: 5
+  Influencia: 2
+  Resistencia: 4
   Faccion: Socialismo
   TipoCarta: Politico
-  Descripcion: Descricion  de CFK S pa probar
-  Rareza: Comun
+  Descripcion: "Al final de tu turno, si jugaste una Acci\xF3n este turno, robas
+    una carta"
+  Rareza: Rara
   TieneFueros: 0
   AccionInmediata: 1
+  TieneArrollar: 0
   Ilustracion: {fileID: 21300000, guid: 4669847b9e01c14479a3b175e0c9e6a1, type: 3}
+  effectType: 0
+  effectAmount: 0
+  ParamCartasARobar: 0
+  "ParamDa\xF1o": 0
+  ParamCuracion: 0
+  ParamReduccionDeCosto: 0
+  ParamDuracionTurnos: 0

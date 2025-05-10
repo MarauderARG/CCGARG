@@ -19,9 +19,16 @@ MonoBehaviour:
   Resistencia: 0
   Faccion: Derecha
   TipoCarta: Accion
-  Descripcion: "Destruye 3 puntos de Poder Pol\xEDtico de cada jugador y reduce el
-    Dinero m\xE1ximo del oponente en 10."
-  Rareza: Epica
+  Descripcion: Ambos jugadores pierden 7 de Dinero
+  Rareza: Rara
   TieneFueros: 0
   AccionInmediata: 0
-  Ilustracion: {fileID: 21300000, guid: 7ed3c19e06cfae342bd2d41aec26982b, type: 3}
+  TieneArrollar: 0
+  Ilustracion: {fileID: 21300000, guid: f048b44c1f87c0e4fa2f75baf9c34a77, type: 3}
+  effectType: 1
+  effectAmount: 7
+  ParamCartasARobar: 0
+  "ParamDa\xF1o": 0
+  ParamCuracion: 0
+  ParamReduccionDeCosto: 0
+  ParamDuracionTurnos: 0

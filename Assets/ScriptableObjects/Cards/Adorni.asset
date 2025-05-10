@@ -19,8 +19,16 @@ MonoBehaviour:
   Resistencia: 3
   Faccion: Derecha
   TipoCarta: Politico
-  Descripcion: Bocero pressidencial, es la voz de milei
+  Descripcion: "Tus otros Pol\xEDticos de Derecha en juego tienen +1 Influencia"
   Rareza: Comun
   TieneFueros: 0
   AccionInmediata: 0
+  TieneArrollar: 0
   Ilustracion: {fileID: 21300000, guid: 0d60c60ddcac4ff46b9dfd00fbf2fb69, type: 3}
+  effectType: 0
+  effectAmount: 0
+  ParamCartasARobar: 0
+  "ParamDa\xF1o": 0
+  ParamCuracion: 0
+  ParamReduccionDeCosto: 0
+  ParamDuracionTurnos: 0
